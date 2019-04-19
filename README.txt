@@ -1,0 +1,1 @@
+Uruchamianie programu poprzez metodę main klasy LaptopView.
