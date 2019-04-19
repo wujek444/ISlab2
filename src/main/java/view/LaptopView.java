@@ -3,6 +3,7 @@ package view;
 import model.Laptop;
 import model.LaptopList;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import parser.LaptopTxtParser;
 import reader.TextFileReader;
 
@@ -84,6 +85,13 @@ public class LaptopView {
             int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File txtFileToSave = fileChooser.getSelectedFile();
+                if (FilenameUtils.getExtension(txtFileToSave.getName()).equalsIgnoreCase("txt")) {
+                    // dobre rozszerzenie
+                } else {
+                    txtFileToSave = new File(txtFileToSave.toString() + ".txt");
+                    txtFileToSave = new File(txtFileToSave.getParentFile(),
+                            FilenameUtils.getBaseName(txtFileToSave.getName())+".txt");
+                }
                 try {
                     FileUtils.writeStringToFile(txtFileToSave, String.join("\n", lines));
                 } catch (IOException e1) {
@@ -104,6 +112,13 @@ public class LaptopView {
                 int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File xmlFileToSave = fileChooser.getSelectedFile();
+                    if (FilenameUtils.getExtension(xmlFileToSave.getName()).equalsIgnoreCase("xml")) {
+                        // dobre rozszerzenie
+                    } else {
+                        xmlFileToSave = new File(xmlFileToSave.toString() + ".xml");
+                        xmlFileToSave = new File(xmlFileToSave.getParentFile(),
+                                FilenameUtils.getBaseName(xmlFileToSave.getName())+".xml");
+                    }
 
                     jaxbContext = JAXBContext.newInstance(LaptopList.class);
                     Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
