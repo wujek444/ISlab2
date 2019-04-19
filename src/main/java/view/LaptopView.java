@@ -1,17 +1,18 @@
 package view;
 
 import model.Laptop;
+import org.apache.commons.io.FileUtils;
 import parser.LaptopTxtParser;
 import reader.TextFileReader;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
@@ -48,48 +49,64 @@ public class LaptopView {
     };
 
     public LaptopView() {
-
         laptopTableModel = (DefaultTableModel) laptopTable.getModel();
         createColumns();
 
 
-        readTextFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fileChooser.setFileFilter(txtFilter);
-                int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File txtFile = fileChooser.getSelectedFile();
-                    loadDataFromFile(txtFile);
-                    log.append("Opening: " + txtFile.getName() + ".\n");
-                } else {
-                    log.append("Open command cancelled by user.\n");
+        readTextFileButton.addActionListener(e -> {
+            fileChooser.setFileFilter(txtFilter);
+            int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File txtFile = fileChooser.getSelectedFile();
+                loadDataFromFile(txtFile);
+                log.append("Opening: " + txtFile.getName() + ".\n");
+            } else {
+                log.append("Open command cancelled by user.\n");
+            }
+        });
+
+        saveToTextButton.addActionListener(e -> {
+            Vector dataVector = laptopTableModel.getDataVector();
+            List<String> lines = new ArrayList<>();
+            dataVector.forEach(element -> lines.add(String.join(";", (List<String>) element) + ";"));
+
+            fileChooser.setFileFilter(txtFilter);
+            int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File txtFileToSave = fileChooser.getSelectedFile();
+                try {
+                    FileUtils.writeStringToFile(txtFileToSave, String.join("\n", lines));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
+                log.append("Saving: " + txtFileToSave.getName() + ".\n");
+            } else {
+                log.append("Save command cancelled by user.\n");
             }
         });
     }
 
-    private void createColumns(){
-        for(String columnName : COLUMN_NAMES){
+    private void createColumns() {
+        for (String columnName : COLUMN_NAMES) {
             laptopTableModel.addColumn(columnName);
         }
     }
 
-    private void loadDataFromFile(File file){
+    private void loadDataFromFile(File file) {
         TextFileReader textFileReader = new TextFileReader();
-        List<String> fileLines =  textFileReader.readLines(file);
+        List<String> fileLines = textFileReader.readLines(file);
 
         LaptopTxtParser txtParser = new LaptopTxtParser();
         List<Laptop> laptops = txtParser.parseList(fileLines);
 
-        if(laptops.size() > 0){
+        if (laptops.size() > 0) {
             fillTableModelWithLaptopData(laptops);
         }
     }
 
-    private void fillTableModelWithLaptopData(List<Laptop> laptops){
+    private void fillTableModelWithLaptopData(List<Laptop> laptops) {
         Object[] rowData = new Object[15];
-        for(Laptop laptop : laptops){
+        for (Laptop laptop : laptops) {
             rowData[0] = laptop.getManufacturer();
             rowData[1] = laptop.getMatrixSize();
             rowData[2] = laptop.getResolution();
