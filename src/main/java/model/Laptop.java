@@ -1,23 +1,7 @@
 package model;
 
 public class Laptop {
-    /*
-    producent;
-    wielkość matrycy;
-    rozdzielczość;
-    powłoka matrycy;
-    ekran dotykowy;
-    seria procesora;
-    liczba rdzeni;
-    taktowanie bazowe;
-    wielkość pamięci RAM;
-    pojemność dysku;
-    typ dysku;
-    karta graficzna;
-    pamięć karty graficznej;
-    system operacyjny;
-    napęd optyczny;
-    */
+
     private String manufacturer;
     private String matrixSize;
     private String resolution;

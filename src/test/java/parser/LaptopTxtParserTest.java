@@ -4,6 +4,10 @@ import model.Laptop;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class LaptopTxtParserTest {
@@ -20,8 +24,8 @@ public class LaptopTxtParserTest {
 
     @Test
     public void split() {
-        String[] actual = parser.split(line2);
-        String[] expected = {"Huawei", "13\"", "1366x768", "matowa", "nie", "intel i7"};
+        List<String> actual = parser.split(line2);
+        List<String> expected = new ArrayList<>(Arrays.asList("Huawei", "13\"", "1366x768", "matowa", "nie", "intel i7"));
 
     }
 
