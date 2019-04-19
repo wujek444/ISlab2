@@ -12,6 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class LaptopView {
             int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File txtFile = fileChooser.getSelectedFile();
-                loadDataFromFile(txtFile);
+                loadDataFromTxtFile(txtFile);
                 log.append("Opening: " + txtFile.getName() + ".\n");
             } else {
                 log.append("Open command cancelled by user.\n");
@@ -121,7 +122,15 @@ public class LaptopView {
         });
 
         loadXMLButton.addActionListener(e -> {
-
+            fileChooser.setFileFilter(xmlFilter);
+            int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File xmlFile = fileChooser.getSelectedFile();
+                loadDataFromXmlFile(xmlFile);
+                log.append("Opening: " + xmlFile.getName() + ".\n");
+            } else {
+                log.append("Open command cancelled by user.\n");
+            }
         });
     }
 
@@ -131,12 +140,30 @@ public class LaptopView {
         }
     }
 
-    private void loadDataFromFile(File file) {
+    private void loadDataFromTxtFile(File file) {
         List<String> fileLines = textFileReader.readLines(file);
         List<Laptop> laptops = txtParser.parseList(fileLines);
 
         if (laptops.size() > 0) {
             fillTableModelWithLaptopData(laptops);
+        }
+    }
+
+    private void loadDataFromXmlFile(File file){
+        try {
+
+            JAXBContext jaxbContext = JAXBContext.newInstance(LaptopList.class);
+
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            LaptopList laptopList = (LaptopList) jaxbUnmarshaller.unmarshal(file);
+            System.out.println(laptopList);
+
+            if(laptopList.getLaptop().size() > 0){
+                fillTableModelWithLaptopData(laptopList.getLaptop());
+            }
+
+        } catch (JAXBException e) {
+            e.printStackTrace();
         }
     }
 
