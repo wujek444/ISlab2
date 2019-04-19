@@ -1,6 +1,7 @@
 package view;
 
 import model.Laptop;
+import model.LaptopList;
 import org.apache.commons.io.FileUtils;
 import parser.LaptopTxtParser;
 import reader.TextFileReader;
@@ -8,6 +9,9 @@ import reader.TextFileReader;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,8 +29,13 @@ public class LaptopView {
     private JPanel laptopViewPanel;
     private JScrollPane laptopViewScrollPane;
 
-    final JFileChooser fileChooser = new JFileChooser();
-    final FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("*.txt", "txt", "text");
+    final private JFileChooser fileChooser = new JFileChooser();
+    final private FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("*.txt", "txt");
+    final private FileNameExtensionFilter xmlFilter = new FileNameExtensionFilter("*.xml", "xml");
+
+    final private TextFileReader textFileReader = new TextFileReader();
+    final private LaptopTxtParser txtParser = new LaptopTxtParser();
+
 
     private DefaultTableModel laptopTableModel;
     private static final String[] COLUMN_NAMES = {
@@ -84,6 +93,36 @@ public class LaptopView {
                 log.append("Save command cancelled by user.\n");
             }
         });
+
+        saveToXMLButton.addActionListener(e -> {
+            JAXBContext jaxbContext = null;
+            try {
+                LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
+
+                fileChooser.setFileFilter(xmlFilter);
+                int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File xmlFileToSave = fileChooser.getSelectedFile();
+
+                    jaxbContext = JAXBContext.newInstance(LaptopList.class);
+                    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+                    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+                    jaxbMarshaller.marshal(laptopList, xmlFileToSave);
+                    jaxbMarshaller.marshal(laptopList, System.out);
+
+                    log.append("Saving: " + xmlFileToSave.getName() + ".\n");
+                } else {
+                    log.append("Save command cancelled by user.\n");
+                }
+            } catch (JAXBException e1) {
+                e1.printStackTrace();
+            }
+
+        });
+
+        loadXMLButton.addActionListener(e -> {
+
+        });
     }
 
     private void createColumns() {
@@ -93,10 +132,7 @@ public class LaptopView {
     }
 
     private void loadDataFromFile(File file) {
-        TextFileReader textFileReader = new TextFileReader();
         List<String> fileLines = textFileReader.readLines(file);
-
-        LaptopTxtParser txtParser = new LaptopTxtParser();
         List<Laptop> laptops = txtParser.parseList(fileLines);
 
         if (laptops.size() > 0) {

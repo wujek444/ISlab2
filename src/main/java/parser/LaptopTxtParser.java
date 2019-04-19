@@ -5,6 +5,7 @@ import model.Laptop;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
 public class LaptopTxtParser {
 
@@ -34,6 +35,32 @@ public class LaptopTxtParser {
                 splitted.get(13),
                 splitted.get(14)
         );
+    }
+
+    public Laptop parse(Vector laptopVector){
+        return new Laptop(
+                (String)laptopVector.get(0),
+                (String)laptopVector.get(1),
+                (String)laptopVector.get(2),
+                (String)laptopVector.get(3),
+                (String)laptopVector.get(4),
+                (String)laptopVector.get(5),
+                (String)laptopVector.get(6),
+                (String)laptopVector.get(7),
+                (String)laptopVector.get(8),
+                (String)laptopVector.get(9),
+                (String)laptopVector.get(10),
+                (String)laptopVector.get(11),
+                (String)laptopVector.get(12),
+                (String)laptopVector.get(13),
+                (String)laptopVector.get(14)
+        );
+    }
+
+    public List<Laptop> parseVector(Vector laptopsVector){
+        List<Laptop> laptops = new ArrayList<>();
+        laptopsVector.forEach(laptopVector -> laptops.add(parse((Vector) laptopVector)));
+        return laptops;
     }
 
     public List<Laptop> parseList(List<String> lines){
