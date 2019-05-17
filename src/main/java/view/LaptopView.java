@@ -153,7 +153,6 @@ public class LaptopView {
                 } catch (JAXBException e1) {
                     e1.printStackTrace();
                 }
-
             }
         });
 
@@ -187,6 +186,30 @@ public class LaptopView {
         });
     }
 
+    private List<Laptop> mapResultSetToLaptops(ResultSet resultSet) throws SQLException {
+        List<Laptop> foundLaptops = new ArrayList<>();
+        while(resultSet.next()) {
+            Laptop laptop = new Laptop();
+            laptop.setManufacturer(resultSet.getString("manufacturer"));
+            laptop.setMatrixSize(resultSet.getString("matrixSize"));
+            laptop.setResolution(resultSet.getString("resolution"));
+            laptop.setMatrixCoating(resultSet.getString("matrixCoating"));
+            laptop.setTouchPad(resultSet.getString("touchPad"));
+            laptop.setCpuFamily(resultSet.getString("cpuFamily"));
+            laptop.setCoresCount(resultSet.getString("coresCount"));
+            laptop.setClockSpeed(resultSet.getString("clockSpeed"));
+            laptop.setRam(resultSet.getString("ram"));
+            laptop.setDriveCapacity(resultSet.getString("driveCapacity"));
+            laptop.setDriveType(resultSet.getString("driveType"));
+            laptop.setGpu(resultSet.getString("gpu"));
+            laptop.setGpuMemory(resultSet.getString("gpuMemory"));
+            laptop.setOs(resultSet.getString("os"));
+            laptop.setOpticalDrive(resultSet.getString("opticalDrive"));
+            foundLaptops.add(laptop);
+        }
+        return foundLaptops;
+    }
+
     private void importFromDB() {
         try {
             connection = DriverManager.getConnection(dbURL);
@@ -196,6 +219,14 @@ public class LaptopView {
             resultSet.next();
             Integer rowsCount = resultSet.getInt(1);
             logger.log(Level.INFO, "Laptop rows count: " + rowsCount);
+
+            query = "select * from Laptop";
+            resultSet = statement.executeQuery(query);
+
+            List<Laptop> foundLaptops = mapResultSetToLaptops(resultSet);
+            if(foundLaptops.size() > 0) {
+                fillTableModelWithLaptopData(foundLaptops);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
