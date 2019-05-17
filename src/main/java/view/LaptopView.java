@@ -1,5 +1,6 @@
 package view;
 
+import com.google.common.base.Joiner;
 import model.Laptop;
 import model.LaptopList;
 import org.apache.commons.io.FileUtils;
@@ -14,13 +15,17 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 public class LaptopView {
     private JButton readTextFileButton;
@@ -30,6 +35,8 @@ public class LaptopView {
     private JTable laptopTable;
     private JPanel laptopViewPanel;
     private JScrollPane laptopViewScrollPane;
+    private JButton dbImportBtn;
+    private JButton dbExportBtn;
 
     final private JFileChooser fileChooser = new JFileChooser();
     final private FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("*.txt", "txt");
@@ -37,6 +44,8 @@ public class LaptopView {
 
     final private TextFileReader textFileReader = new TextFileReader();
     final private LaptopTxtParser txtParser = new LaptopTxtParser();
+
+    final private Logger logger = Logger.getAnonymousLogger();
 
 
     private DefaultTableModel laptopTableModel;
@@ -64,89 +73,136 @@ public class LaptopView {
         createColumns();
 
 
-        readTextFileButton.addActionListener(e -> {
-            fileChooser.setFileFilter(txtFilter);
-            int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File txtFile = fileChooser.getSelectedFile();
-                loadDataFromTxtFile(txtFile);
-                log.append("Opening: " + txtFile.getName() + ".\n");
-            } else {
-                log.append("Open command cancelled by user.\n");
-            }
-        });
-
-        saveToTextButton.addActionListener(e -> {
-            Vector dataVector = laptopTableModel.getDataVector();
-            List<String> lines = new ArrayList<>();
-            dataVector.forEach(element -> lines.add(String.join(";", (List<String>) element) + ";"));
-
-            fileChooser.setFileFilter(txtFilter);
-            int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File txtFileToSave = fileChooser.getSelectedFile();
-                if (FilenameUtils.getExtension(txtFileToSave.getName()).equalsIgnoreCase("txt")) {
-                    // dobre rozszerzenie
+        readTextFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileChooser.setFileFilter(txtFilter);
+                int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File txtFile = fileChooser.getSelectedFile();
+                    LaptopView.this.loadDataFromTxtFile(txtFile);
+                    Logger.getAnonymousLogger().log(Level.INFO,"Opening: " + txtFile.getName() + ".\n");
                 } else {
-                    txtFileToSave = new File(txtFileToSave.toString() + ".txt");
-                    txtFileToSave = new File(txtFileToSave.getParentFile(),
-                            FilenameUtils.getBaseName(txtFileToSave.getName())+".txt");
+                    logger.log(Level.INFO, "Open command cancelled by user.\n");
                 }
-                try {
-                    FileUtils.writeStringToFile(txtFileToSave, String.join("\n", lines));
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                log.append("Saving: " + txtFileToSave.getName() + ".\n");
-            } else {
-                log.append("Save command cancelled by user.\n");
             }
         });
 
-        saveToXMLButton.addActionListener(e -> {
-            JAXBContext jaxbContext = null;
-            try {
-                LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
+        saveToTextButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Vector dataVector = laptopTableModel.getDataVector();
+                List<String> lines = new ArrayList<>();
 
-                fileChooser.setFileFilter(xmlFilter);
+                for(Object element : dataVector) {
+                    lines.add( Joiner.on(";").join( (List<String>) element) + ";");
+                }
+
+                fileChooser.setFileFilter(txtFilter);
                 int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File xmlFileToSave = fileChooser.getSelectedFile();
-                    if (FilenameUtils.getExtension(xmlFileToSave.getName()).equalsIgnoreCase("xml")) {
+                    File txtFileToSave = fileChooser.getSelectedFile();
+                    if (FilenameUtils.getExtension(txtFileToSave.getName()).equalsIgnoreCase("txt")) {
                         // dobre rozszerzenie
                     } else {
-                        xmlFileToSave = new File(xmlFileToSave.toString() + ".xml");
-                        xmlFileToSave = new File(xmlFileToSave.getParentFile(),
-                                FilenameUtils.getBaseName(xmlFileToSave.getName())+".xml");
+                        txtFileToSave = new File(txtFileToSave.toString() + ".txt");
+                        txtFileToSave = new File(txtFileToSave.getParentFile(),
+                                FilenameUtils.getBaseName(txtFileToSave.getName()) + ".txt");
                     }
-
-                    jaxbContext = JAXBContext.newInstance(LaptopList.class);
-                    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-                    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-                    jaxbMarshaller.marshal(laptopList, xmlFileToSave);
-                    jaxbMarshaller.marshal(laptopList, System.out);
-
-                    log.append("Saving: " + xmlFileToSave.getName() + ".\n");
+                    try {
+                        FileUtils.writeStringToFile(txtFileToSave, Joiner.on("\n").join(lines));
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    logger.log(Level.INFO, "Saving: " + txtFileToSave.getName() + ".\n");
                 } else {
-                    log.append("Save command cancelled by user.\n");
+                    logger.log(Level.INFO, "Save command cancelled by user.\n");
                 }
-            } catch (JAXBException e1) {
-                e1.printStackTrace();
-            }
-
-        });
-
-        loadXMLButton.addActionListener(e -> {
-            fileChooser.setFileFilter(xmlFilter);
-            int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File xmlFile = fileChooser.getSelectedFile();
-                loadDataFromXmlFile(xmlFile);
-                log.append("Opening: " + xmlFile.getName() + ".\n");
-            } else {
-                log.append("Open command cancelled by user.\n");
             }
         });
+
+        saveToXMLButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JAXBContext jaxbContext = null;
+                try {
+                    LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
+
+                    fileChooser.setFileFilter(xmlFilter);
+                    int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
+                    if (returnVal == JFileChooser.APPROVE_OPTION) {
+                        File xmlFileToSave = fileChooser.getSelectedFile();
+                        if (FilenameUtils.getExtension(xmlFileToSave.getName()).equalsIgnoreCase("xml")) {
+                            // dobre rozszerzenie
+                        } else {
+                            xmlFileToSave = new File(xmlFileToSave.toString() + ".xml");
+                            xmlFileToSave = new File(xmlFileToSave.getParentFile(),
+                                    FilenameUtils.getBaseName(xmlFileToSave.getName()) + ".xml");
+                        }
+
+                        jaxbContext = JAXBContext.newInstance(LaptopList.class);
+                        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+                        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+                        jaxbMarshaller.marshal(laptopList, xmlFileToSave);
+                        jaxbMarshaller.marshal(laptopList, System.out);
+
+                        logger.log(Level.INFO, "Saving: " + xmlFileToSave.getName() + ".\n");
+                    } else {
+                        logger.log(Level.INFO, "Save command cancelled by user.\n");
+                    }
+                } catch (JAXBException e1) {
+                    e1.printStackTrace();
+                }
+
+            }
+        });
+
+        loadXMLButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileChooser.setFileFilter(xmlFilter);
+                int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File xmlFile = fileChooser.getSelectedFile();
+                    LaptopView.this.loadDataFromXmlFile(xmlFile);
+                    logger.log(Level.INFO, "Opening: " + xmlFile.getName() + ".\n");
+                } else {
+                    logger.log(Level.INFO, "Open command cancelled by user.\n");
+                }
+            }
+        });
+
+        dbImportBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                LaptopView.this.importFromDB();
+            }
+        });
+
+        dbExportBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+    }
+
+    private void importFromDB() {
+        try {
+            connection = DriverManager.getConnection(dbURL);
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            query = "select count(id) from Laptop";
+            resultSet = statement.executeQuery(query);
+            resultSet.next();
+            Integer rowsCount = resultSet.getInt(1);
+            logger.log(Level.INFO, "Laptop rows count: " + rowsCount);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void exportToDB() {
+
     }
 
     private void createColumns() {
@@ -204,6 +260,12 @@ public class LaptopView {
         }
     }
 
+    String dbURL = "jdbc:odbc:auto";
+    String query;
+    Connection connection;
+    Statement statement;
+    ResultSet resultSet;
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("LaptopView");
         frame.setContentPane(new LaptopView().laptopViewPanel);
@@ -212,5 +274,10 @@ public class LaptopView {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
 
+        try {
+            Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
+        } catch(ClassNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, ex);
+        }
     }
 }

@@ -59,7 +59,9 @@ public class LaptopTxtParser {
 
     public List<Laptop> parseVector(Vector laptopsVector){
         List<Laptop> laptops = new ArrayList<>();
-        laptopsVector.forEach(laptopVector -> laptops.add(parse((Vector) laptopVector)));
+        for(Object laptopVector : laptopsVector) {
+            laptops.add(parse((Vector) laptopVector));
+        }
         return laptops;
     }
 
