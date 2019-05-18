@@ -51,7 +51,7 @@ public class LaptopView {
 
     final private Logger logger = Logger.getAnonymousLogger();
 
-
+    private final Integer EDITED_HIDDEN_COLIDX = 15;
     private DefaultTableModel laptopTableModel;
     private static final String[] COLUMN_NAMES = {
             "Producent",
@@ -68,8 +68,8 @@ public class LaptopView {
             "Karta graficzna",
             "Pamięć karty graficznej",
             "System operacyjny",
-            "Napęd optyczny"
-
+            "Napęd optyczny",
+            "edited_hidden"
     };
 
     private Integer editedRowNumber = null;
@@ -78,11 +78,15 @@ public class LaptopView {
         laptopTableModel = (DefaultTableModel) laptopTable.getModel();
         createColumns();
 
+        laptopTable.removeColumn(laptopTable.getColumnModel().getColumn(15));
         laptopTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
                 if(e.getType() == TableModelEvent.UPDATE) {
                     editedRowNumber = e.getFirstRow();
+                    if(!(Boolean)laptopTableModel.getValueAt(e.getFirstRow(), EDITED_HIDDEN_COLIDX)){
+                        laptopTableModel.setValueAt(true, e.getFirstRow(), EDITED_HIDDEN_COLIDX);
+                    }
                     laptopTable.repaint();
                 }
                 logger.log(Level.INFO, e.toString());
@@ -101,12 +105,9 @@ public class LaptopView {
                 } else {
                     c.setBackground(new Color(185, 185, 158));
                 }
-//                if(editedRowNumber != null && editedRowNumber == row) {
-//                    c.setBackground(new Color(255, 255, 225));
-//                    if(column == laptopTableModel.getColumnCount() - 1){
-//                        editedRowNumber = null;
-//                    }
-//                }
+                if((Boolean)laptopTableModel.getValueAt(row, EDITED_HIDDEN_COLIDX)) {
+                    c.setBackground(new Color(255, 255, 224));
+                }
                 return c;
             }
         });
@@ -271,15 +272,25 @@ public class LaptopView {
             if(rowsCount > 0) {
                 fillTableModelWithLaptopData(foundLaptops);
             }
-            showRowsCountDialogWithLog(rowsCount);
+            showRowsCountDialogWithLog(foundLaptops);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private void showRowsCountDialogWithLog(Integer rowsCount) {
-        JOptionPane.showMessageDialog(null, "Znaleziono " + rowsCount + " rekordów!");
-        logger.log(Level.INFO, "Laptop rows count: " + rowsCount);
+    private void showRowsCountDialogWithLog(List<Laptop> downloadedLaptops) {
+        JOptionPane.showMessageDialog(null, "Znaleziono " + downloadedLaptops.size() + " rekordów, " +
+                "a w tym " + getTotalDuplicatesCount(downloadedLaptops) + " duplikatów!");
+        logger.log(Level.INFO, "Laptop rows count: " + downloadedLaptops.size());
+    }
+
+    private Integer getTotalDuplicatesCount(List<Laptop> downloadedLaptops) {
+        Integer duplicatesCount = 0;
+        for(Laptop downloadedLaptop : downloadedLaptops) {
+            if(findLaptopDuplicates(downloadedLaptop).size() > 1)
+            duplicatesCount++;
+        }
+        return duplicatesCount;
     }
 
     private void exportToDB() {
@@ -299,7 +310,7 @@ public class LaptopView {
         if (laptops.size() > 0) {
             fillTableModelWithLaptopData(laptops);
         }
-        showRowsCountDialogWithLog(laptops.size());
+        showRowsCountDialogWithLog(laptops);
     }
 
     private void loadDataFromXmlFile(File file){
@@ -314,7 +325,7 @@ public class LaptopView {
             if(laptopList.getLaptop().size() > 0){
                 fillTableModelWithLaptopData(laptopList.getLaptop());
             }
-            showRowsCountDialogWithLog(laptopList.getLaptop().size());
+            showRowsCountDialogWithLog(laptopList.getLaptop());
 
         } catch (JAXBException e) {
             e.printStackTrace();
@@ -322,7 +333,7 @@ public class LaptopView {
     }
 
     private void fillTableModelWithLaptopData(List<Laptop> laptops) {
-        Object[] rowData = new Object[15];
+        Object[] rowData = new Object[16];
         for (Laptop laptop : laptops) {
             rowData[0] = laptop.getManufacturer();
             rowData[1] = laptop.getMatrixSize();
@@ -339,6 +350,7 @@ public class LaptopView {
             rowData[12] = laptop.getGpuMemory();
             rowData[13] = laptop.getOs();
             rowData[14] = laptop.getOpticalDrive();
+            rowData[15] = false;
             laptopTableModel.addRow(rowData);
         }
     }
