@@ -111,6 +111,9 @@ public class LaptopView {
             List<Laptop> laptopsFromModel = txtParser.parseVector(laptopTableModel.getDataVector());
             if(laptopsFromModel.size() > 0) {
                 DBConnector.insertLaptops(laptopsFromModel);
+                JOptionPane.showMessageDialog(null, "Wyeksportowano " + laptopsFromModel.size() + " rekordów!");
+            } else {
+                JOptionPane.showMessageDialog(null, "Brak danych do wyeksportowania!");
             }
         } catch (SQLException e) {
             e.printStackTrace();
