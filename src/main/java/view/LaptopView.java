@@ -43,6 +43,9 @@ public class LaptopView {
     private JScrollPane laptopViewScrollPane;
     private JButton dbImportBtn;
     private JButton dbExportBtn;
+    private JButton clearBtn;
+
+    private DefaultTableModel laptopTableModel;
 
     final private JFileChooser fileChooser = new JFileChooser();
     final private FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("*.txt", "txt");
@@ -56,7 +59,6 @@ public class LaptopView {
 
     private final Integer EDITED_HIDDEN_COLIDX = 15;
     private final Boolean DEFAULT_EDITED = false;
-    private DefaultTableModel laptopTableModel;
     private static final String[] COLUMN_NAMES = {
             "Producent",
             "Wielkość matrycy",
@@ -104,6 +106,17 @@ public class LaptopView {
         return duplicates;
     }
 
+    private void exportToDB() {
+        try {
+            List<Laptop> laptopsFromModel = txtParser.parseVector(laptopTableModel.getDataVector());
+            if(laptopsFromModel.size() > 0) {
+                DBConnector.insertLaptops(laptopsFromModel);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void importFromDB() {
         try {
             ResultSet resultSet = DBConnector.executeQuery("select * from Laptop");
@@ -132,10 +145,6 @@ public class LaptopView {
                 duplicatesCount++;
         }
         return duplicatesCount;
-    }
-
-    private void exportToDB() {
-
     }
 
     private void createColumns() {
@@ -266,7 +275,14 @@ public class LaptopView {
         dbExportBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                exportToDB();
+            }
+        });
 
+        clearBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                laptopTableModel.setRowCount(0);
             }
         });
     }
