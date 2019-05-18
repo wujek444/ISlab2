@@ -9,12 +9,16 @@ import parser.LaptopTxtParser;
 import reader.TextFileReader;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -68,10 +72,44 @@ public class LaptopView {
 
     };
 
+    private Integer editedRowNumber = null;
+
     public LaptopView() {
         laptopTableModel = (DefaultTableModel) laptopTable.getModel();
         createColumns();
 
+        laptopTable.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                if(e.getType() == TableModelEvent.UPDATE) {
+                    editedRowNumber = e.getFirstRow();
+                    laptopTable.repaint();
+                }
+                logger.log(Level.INFO, e.toString());
+            }
+        });
+
+        laptopTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                //wywołanie per komórka;
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                Laptop rowLaptop = txtParser.parse((Vector) laptopTableModel.getDataVector().get(row));
+
+                if(findLaptopDuplicates(rowLaptop).size() > 1) {
+                    c.setBackground(new java.awt.Color(255, 72, 72));
+                } else {
+                    c.setBackground(new Color(185, 185, 158));
+                }
+//                if(editedRowNumber != null && editedRowNumber == row) {
+//                    c.setBackground(new Color(255, 255, 225));
+//                    if(column == laptopTableModel.getColumnCount() - 1){
+//                        editedRowNumber = null;
+//                    }
+//                }
+                return c;
+            }
+        });
 
         readTextFileButton.addActionListener(new ActionListener() {
             @Override
@@ -81,7 +119,7 @@ public class LaptopView {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File txtFile = fileChooser.getSelectedFile();
                     LaptopView.this.loadDataFromTxtFile(txtFile);
-                    Logger.getAnonymousLogger().log(Level.INFO,"Opening: " + txtFile.getName() + ".\n");
+                    logger.log(Level.INFO,"Opening: " + txtFile.getName() + ".\n");
                 } else {
                     logger.log(Level.INFO, "Open command cancelled by user.\n");
                 }
@@ -186,6 +224,17 @@ public class LaptopView {
         });
     }
 
+    private List<Laptop> findLaptopDuplicates(Laptop laptopToCheck) {
+        List<Laptop> duplicates = new ArrayList<>();
+        List<Laptop> laptopsFromTableModel = txtParser.parseVector(laptopTableModel.getDataVector());
+        for(Laptop laptopFromTableModel : laptopsFromTableModel) {
+            if(laptopFromTableModel.equals(laptopToCheck)){
+                duplicates.add(laptopFromTableModel);
+            }
+        }
+        return duplicates;
+    }
+
     private List<Laptop> mapResultSetToLaptops(ResultSet resultSet) throws SQLException {
         List<Laptop> foundLaptops = new ArrayList<>();
         while(resultSet.next()) {
@@ -214,22 +263,23 @@ public class LaptopView {
         try {
             connection = DriverManager.getConnection(dbURL);
             statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            query = "select count(id) from Laptop";
-            resultSet = statement.executeQuery(query);
-            resultSet.next();
-            Integer rowsCount = resultSet.getInt(1);
-            logger.log(Level.INFO, "Laptop rows count: " + rowsCount);
-
             query = "select * from Laptop";
             resultSet = statement.executeQuery(query);
 
             List<Laptop> foundLaptops = mapResultSetToLaptops(resultSet);
-            if(foundLaptops.size() > 0) {
+            Integer rowsCount = foundLaptops.size();
+            if(rowsCount > 0) {
                 fillTableModelWithLaptopData(foundLaptops);
             }
+            showRowsCountDialogWithLog(rowsCount);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void showRowsCountDialogWithLog(Integer rowsCount) {
+        JOptionPane.showMessageDialog(null, "Znaleziono " + rowsCount + " rekordów!");
+        logger.log(Level.INFO, "Laptop rows count: " + rowsCount);
     }
 
     private void exportToDB() {
@@ -249,6 +299,7 @@ public class LaptopView {
         if (laptops.size() > 0) {
             fillTableModelWithLaptopData(laptops);
         }
+        showRowsCountDialogWithLog(laptops.size());
     }
 
     private void loadDataFromXmlFile(File file){
@@ -263,6 +314,7 @@ public class LaptopView {
             if(laptopList.getLaptop().size() > 0){
                 fillTableModelWithLaptopData(laptopList.getLaptop());
             }
+            showRowsCountDialogWithLog(laptopList.getLaptop().size());
 
         } catch (JAXBException e) {
             e.printStackTrace();

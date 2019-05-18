@@ -1,10 +1,10 @@
 package model;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
 @XmlRootElement
 public class Laptop {
-
     private String manufacturer;
     private String matrixSize;
     private String resolution;
@@ -160,5 +160,33 @@ public class Laptop {
 
     public void setOpticalDrive(String opticalDrive) {
         this.opticalDrive = opticalDrive;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Laptop laptop = (Laptop) o;
+        return Objects.equals(manufacturer, laptop.manufacturer) &&
+                Objects.equals(matrixSize, laptop.matrixSize) &&
+                Objects.equals(resolution, laptop.resolution) &&
+                Objects.equals(matrixCoating, laptop.matrixCoating) &&
+                Objects.equals(touchPad, laptop.touchPad) &&
+                Objects.equals(cpuFamily, laptop.cpuFamily) &&
+                Objects.equals(coresCount, laptop.coresCount) &&
+                Objects.equals(clockSpeed, laptop.clockSpeed) &&
+                Objects.equals(ram, laptop.ram) &&
+                Objects.equals(driveCapacity, laptop.driveCapacity) &&
+                Objects.equals(driveType, laptop.driveType) &&
+                Objects.equals(gpu, laptop.gpu) &&
+                Objects.equals(gpuMemory, laptop.gpuMemory) &&
+                Objects.equals(os, laptop.os) &&
+                Objects.equals(opticalDrive, laptop.opticalDrive);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(manufacturer, matrixSize, resolution, matrixCoating, touchPad, cpuFamily, coresCount, clockSpeed, ram, driveCapacity, driveType, gpu, gpuMemory, os, opticalDrive);
     }
 }
