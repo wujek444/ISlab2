@@ -12,7 +12,6 @@ public class DBConnector {
     private static Connection connection;
     private static Statement statement;
 
-
     private static final String INSERT_QUERY = "INSERT INTO `is`.`laptop`\n" +
             "(`manufacturer`, `matrixSize`,`resolution`,`matrixCoating`, `touchPad`,\n" +
             "`cpuFamily`, `coresCount`, `clockSpeed`, `ram`,`driveCapacity`,\n" +
@@ -38,10 +37,9 @@ public class DBConnector {
         }
     }
 
-    public static void insertLaptop(Laptop laptopToPersist) throws SQLException {
+    private static void insertLaptop(Laptop laptopToPersist) throws SQLException {
         connection = DriverManager.getConnection(DB_URL);
         statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
         statement.executeUpdate(createInsertLaptopQuery(laptopToPersist));
     }
 
