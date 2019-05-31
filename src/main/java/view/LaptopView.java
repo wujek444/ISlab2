@@ -44,6 +44,9 @@ public class LaptopView {
     private JButton dbImportBtn;
     private JButton dbExportBtn;
     private JButton clearBtn;
+    private JButton raportWgNazwyProducentaButton;
+    private JButton raportWgProporcjiEkranuButton;
+    private JButton niestandardowyExportDoXMLButton;
 
     private DefaultTableModel laptopTableModel;
 

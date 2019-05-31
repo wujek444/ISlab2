@@ -37,6 +37,20 @@ public class DBConnector {
         }
     }
 
+    public static Integer getLaptopsCountByManufacturer(String manufacturer) throws SQLException {
+        final String query = "select count(id) as laptopsCount from laptop where manufacturer= " + createSQLStringValue(manufacturer);
+        ResultSet resultSet = executeQuery(query);
+        resultSet.next();
+        return resultSet.getInt("laptopsCount");
+    }
+
+    public static Integer getLaptopsCountByScreenResolution(String resolution) throws SQLException {
+        final String query = "select count(id) as laptopsCount from Laptop where resolution= " + createSQLStringValue(resolution);
+        ResultSet resultSet = executeQuery(query);
+        resultSet.next();
+        return resultSet.getInt("laptopsCount");
+    }
+
     private static void insertLaptop(Laptop laptopToPersist) throws SQLException {
         connection = DriverManager.getConnection(DB_URL);
         statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
