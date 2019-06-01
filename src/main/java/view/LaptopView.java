@@ -1,5 +1,6 @@
 package view;
 
+import client.LaptopClient;
 import com.google.common.base.Joiner;
 import db.DBConnector;
 import model.Laptop;
@@ -60,6 +61,9 @@ public class LaptopView {
 
     final private Logger logger = Logger.getAnonymousLogger();
 
+    private LaptopClient laptopClient;
+    private static JFrame frame;
+
     private final Integer EDITED_HIDDEN_COLIDX = 15;
     private final Boolean DEFAULT_EDITED = false;
     private static final String[] COLUMN_NAMES = {
@@ -83,13 +87,14 @@ public class LaptopView {
 
     public LaptopView() {
         laptopTableModel = (DefaultTableModel) laptopTable.getModel();
+        laptopClient = new LaptopClient();
         createColumns();
         initGUIComponents();
     }
 
     public static void main(String[] args) {
         DBConnector.loadODBCDriverClass();
-        JFrame frame = new JFrame("LaptopView");
+        frame = new JFrame("LaptopView");
         frame.setContentPane(new LaptopView().laptopViewPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
@@ -289,6 +294,47 @@ public class LaptopView {
             @Override
             public void actionPerformed(ActionEvent e) {
                 laptopTableModel.setRowCount(0);
+            }
+        });
+
+        raportWgNazwyProducentaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String manufacturer = (String)JOptionPane.showInputDialog(
+                        frame,
+                        "Podaj nazwę producenta:",
+                        "Liczba wg nazwy producenta",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        null,
+                        "Samsung");
+
+                if ((manufacturer != null) && (manufacturer.length() > 0)) {
+                    Integer laptopCountByManufacturer = laptopClient.getLaptopCountByManufacturer(manufacturer);
+                    JOptionPane.showMessageDialog(frame,
+                            "Znaleziono " + laptopCountByManufacturer + " laptopów o nazwie producenta: " + manufacturer + ".");
+                }
+            }
+        });
+
+        raportWgProporcjiEkranuButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Object[] possibilities = {"16:9", "16:10"};
+                String aspectRatio = (String)JOptionPane.showInputDialog(
+                        frame,
+                        "Wybierz proporcję ekranu",
+                        "Liczba wg proporcji ekranu",
+                        JOptionPane.PLAIN_MESSAGE,
+                        null,
+                        possibilities,
+                        "16:9");
+
+                if ((aspectRatio != null) && (aspectRatio.length() > 0)) {
+                    Integer laptopCountByAspectRatio = laptopClient.getLaptopCountByScreenAspectRatio(aspectRatio);
+                    JOptionPane.showMessageDialog(frame,
+                            "Znaleziono " + laptopCountByAspectRatio + " laptopów o skali ekranu: " + aspectRatio + ".");
+                }
             }
         });
     }

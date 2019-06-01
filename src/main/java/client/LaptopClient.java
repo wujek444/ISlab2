@@ -1,5 +1,6 @@
 package client;
 
+import dictonary.ScreenResolutionDictionary;
 import ws.LaptopWS;
 
 import javax.xml.namespace.QName;
@@ -27,7 +28,7 @@ public class LaptopClient {
         return client.getLaptopCountByManufacturer(manufacturer);
     }
 
-    public Integer getLaptopCountByScreenResolution(String resolution) {
-        return client.getLaptopCountByScreenResolution(resolution);
+    public Integer getLaptopCountByScreenAspectRatio(String ratio) {
+        return client.getLaptopCountByScreenResolutions(ScreenResolutionDictionary.getDictionaryByAspectRatio(ratio));
     }
 }

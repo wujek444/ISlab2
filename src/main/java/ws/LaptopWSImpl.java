@@ -4,6 +4,7 @@ import db.DBConnector;
 
 import javax.jws.WebService;
 import java.sql.SQLException;
+import java.util.List;
 
 @WebService(endpointInterface = "ws.LaptopWS")
 public class LaptopWSImpl implements LaptopWS {
@@ -23,6 +24,17 @@ public class LaptopWSImpl implements LaptopWS {
         Integer laptopsCount = 0;
         try {
             laptopsCount = DBConnector.getLaptopsCountByScreenResolution(resolution);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return laptopsCount;
+    }
+
+    @Override
+    public Integer getLaptopCountByScreenResolutions(List<String> resolutions) {
+        Integer laptopsCount = 0;
+        try {
+            laptopsCount = DBConnector.getLaptopsCountByScreenResolutions(resolutions);
         } catch (SQLException e) {
             e.printStackTrace();
         }

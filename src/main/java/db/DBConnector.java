@@ -1,5 +1,6 @@
 package db;
 
+import com.sun.deploy.util.StringUtils;
 import model.Laptop;
 
 import javax.swing.*;
@@ -49,6 +50,24 @@ public class DBConnector {
         ResultSet resultSet = executeQuery(query);
         resultSet.next();
         return resultSet.getInt("laptopsCount");
+    }
+
+    public static Integer getLaptopsCountByScreenResolutions(List<String> resolutions) throws SQLException {
+        final String query = "select count(id) as laptopsCount from Laptop where resolution in( " + stringListToInStatementList(resolutions) + ")";
+        ResultSet resultSet = executeQuery(query);
+        resultSet.next();
+        return resultSet.getInt("laptopsCount");
+    }
+
+    private static String stringListToInStatementList(List<String> strings) {
+        StringBuilder strBuilder = new StringBuilder();
+        for(int i=0; i<strings.size(); i++){
+            strBuilder.append("\'").append(strings.get(i)).append("\'");
+            if(i < strings.size()-1) {
+                strBuilder.append(",");
+            }
+        }
+        return strBuilder.toString();
     }
 
     private static void insertLaptop(Laptop laptopToPersist) throws SQLException {
