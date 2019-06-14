@@ -337,6 +337,101 @@ public class LaptopView {
                 }
             }
         });
+
+        niestandardowyExportDoXMLButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ArrayList<JCheckBox> checkboxes = new ArrayList<>();
+                for (String columnName : COLUMN_NAMES){
+                    if(!columnName.equals("edited_hidden")) {
+                        JCheckBox box = new JCheckBox(columnName);
+                        checkboxes.add(box);
+                    }
+                }
+                Object[] obj = checkboxes.toArray(new Object[checkboxes.size()]);
+                int n = JOptionPane.showConfirmDialog(frame, obj, "Wybierz pola do wyeksportowania", JOptionPane.OK_CANCEL_OPTION);
+                List<JCheckBox> selectedCheckboxes = new ArrayList<>();
+                if(n==JOptionPane.YES_OPTION) {
+                    for(JCheckBox checkbox : checkboxes) {
+                        if(checkbox.isSelected()) {
+                            selectedCheckboxes.add(checkbox);
+                        }
+                    }
+                    if(selectedCheckboxes.size() > 5) {
+                        JOptionPane.showMessageDialog(frame, "Można wybrać do 5 pól do wyeksportowania przy użyciu tej opcji!", "Uwaga!", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        List<Laptop> foundLaptops = new ArrayList<>();
+                        try {
+                            foundLaptops = laptopDBMapper.mapResultSetToLaptops(DBConnector.executeQuery("select * from Laptop"));
+                        } catch (SQLException e1) {
+                            e1.printStackTrace();
+                        }
+
+                        List<Laptop> laptopsOnlyWithSelectedFields = getLaptopsOnlyWithSelectedFields(foundLaptops, selectedCheckboxes);
+                        saveToXMLFile(new LaptopList(laptopsOnlyWithSelectedFields));
+                    }
+                }
+            }
+        });
+    }
+
+    private List<Laptop> getLaptopsOnlyWithSelectedFields(List<Laptop> laptops, List<JCheckBox> selectedCheckboxes) {
+        List<Laptop> processedLaptops = new ArrayList<>();
+        for(Laptop laptop : laptops) {
+            Laptop processedLaptop = new Laptop();
+            for(JCheckBox checkBox : selectedCheckboxes) {
+                switch (checkBox.getText()) {
+                    case "Producent":
+                        processedLaptop.setManufacturer(laptop.getManufacturer());
+                        break;
+                    case "Wielkość matrycy":
+                        processedLaptop.setMatrixSize(laptop.getMatrixSize());
+                        break;
+                    case "Powłoka matrycy":
+                        processedLaptop.setMatrixCoating(laptop.getMatrixCoating());
+                        break;
+                    case "Ekran dotykowy":
+                        processedLaptop.setTouchPad(laptop.getTouchPad());
+                        break;
+                    case "Seria procesora":
+                        processedLaptop.setCpuFamily(laptop.getCpuFamily());
+                        break;
+                    case "Liczba rdzeni":
+                        processedLaptop.setCoresCount(laptop.getCoresCount());
+                        break;
+                    case "Taktowanie bazowe":
+                        processedLaptop.setClockSpeed(laptop.getClockSpeed());
+                        break;
+                    case "Wielkość pamięci RAM":
+                        processedLaptop.setRam(laptop.getRam());
+                        break;
+                    case "Pojemność dysku":
+                        processedLaptop.setDriveCapacity(laptop.getDriveCapacity());
+                        break;
+                    case "Typ dysku":
+                        processedLaptop.setDriveType(laptop.getDriveType());
+                        break;
+                    case "Karta graficzna":
+                        processedLaptop.setGpu(laptop.getGpu());
+                        break;
+                    case "Pamięć karty graficznej":
+                        processedLaptop.setGpuMemory(laptop.getGpuMemory());
+                        break;
+                    case "System operacyjny":
+                        processedLaptop.setOs(laptop.getOs());
+                        break;
+                    case "Napęd optyczny":
+                        processedLaptop.setOpticalDrive(laptop.getOpticalDrive());
+                        break;
+                    case "Rozdzielczość":
+                        processedLaptop.setResolution(laptop.getResolution());
+                        break;
+
+                }
+            }
+            processedLaptops.add(processedLaptop);
+        }
+        return processedLaptops;
     }
 
     private void saveToTextFile() {
@@ -369,11 +464,9 @@ public class LaptopView {
         }
     }
 
-    private void saveToXMLFile() {
+    private void saveToXMLFile(LaptopList laptopList) {
         JAXBContext jaxbContext;
         try {
-            LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
-
             fileChooser.setFileFilter(xmlFilter);
             int returnVal = fileChooser.showSaveDialog(laptopViewPanel);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -401,6 +494,11 @@ public class LaptopView {
         }
     }
 
+    private void saveToXMLFile() {
+        LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
+        saveToXMLFile(laptopList);
+    }
+
     private void readFromTxtFile() {
         fileChooser.setFileFilter(txtFilter);
         int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
@@ -423,5 +521,13 @@ public class LaptopView {
         } else {
             logger.log(Level.INFO, "Open command cancelled by user.\n");
         }
+    }
+
+    private List<Laptop> getLaptopsFromModel() {
+        LaptopList laptopList = new LaptopList(txtParser.parseVector(laptopTableModel.getDataVector()));
+        if (laptopList.getLaptop() != null) {
+            return laptopList.getLaptop();
+        }
+        return new ArrayList<>();
     }
 }
