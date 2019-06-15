@@ -1,6 +1,5 @@
 package view;
 
-import client.LaptopClient;
 import com.google.common.base.Joiner;
 import db.DBConnector;
 import model.Laptop;
@@ -343,6 +342,7 @@ public class LaptopView {
 
 
     private void readFromTxtFile() {
+        logger.log(Level.INFO, "x=" + readTextFileButton.getX() + ";y=" + readTextFileButton.getX());
         fileChooser.setFileFilter(txtFilter);
         int returnVal = fileChooser.showOpenDialog(laptopViewPanel);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
