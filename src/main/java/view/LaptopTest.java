@@ -84,6 +84,7 @@ public class LaptopTest {
     private void beginTest() {
         try {
             addLaptopTest();
+            manufacturerReportTest();
         } catch (AWTException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
@@ -100,7 +101,22 @@ public class LaptopTest {
         clickOpenInFileChooser();
         TimeUnit.SECONDS.sleep(1);
         RobotUtils.takeScreenshot(SCREENSHOTS_PATH + "addLaptopTest.bmp");
+        TimeUnit.SECONDS.sleep(1);
     }
+
+    private void manufacturerReportTest() throws AWTException, InterruptedException, IOException {
+        String inputManufacturer = manufacturer4ReportTxt.getText();
+        focusToWindow("LaptopClient");
+        RobotUtils.click(730,40);
+        TimeUnit.SECONDS.sleep(1);
+        type(inputManufacturer);
+        TimeUnit.SECONDS.sleep(1);
+        pressEnter();
+        TimeUnit.SECONDS.sleep(1);
+        RobotUtils.takeScreenshot(SCREENSHOTS_PATH + "manufacturerReportTest.bmp");
+        TimeUnit.SECONDS.sleep(1);
+    }
+
 
     private void clickReadFromTxt() throws AWTException {
         RobotUtils.click(160,30);
@@ -134,7 +150,7 @@ public class LaptopTest {
     private Laptop createLaptopFromInput() {
         Laptop laptop = new Laptop();
         laptop.setManufacturer(manufacturerTxt.getText());
-        laptop.setMatrixSize(matrixCoatingTxt.getText());
+        laptop.setMatrixSize(matrixSizeTxt.getText());
         laptop.setResolution(resolutionTxt.getText());
         laptop.setMatrixCoating(matrixCoatingTxt.getText());
         laptop.setTouchPad(touchScreenTxt.getText());
